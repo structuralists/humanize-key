@@ -1,4 +1,5 @@
 name: Publish Release
+
 on:
    push:
       branches:
@@ -20,12 +21,12 @@ jobs:
          - run: git push
 
          - name: Checkout 2
-           uses: actions/checkout@v3
+           uses: actions/checkout@v2
            with:
               node-version: 16
 
          - name: Setup node
-           uses: actions/setup-node
+           uses: actions/setup-node@v3
            with:
               registry-url: https://registry.npmjs.org
 
