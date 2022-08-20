@@ -9,7 +9,7 @@ jobs:
       runs-on: ubuntu-latest
       if: "!startsWith(github.event.head_commit.message, '[RELEASE]')"
       steps:
-         - name: checkout 1
+         - name: Checkout 1
            uses: actions/checkout@v2
            with:
               token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
@@ -19,15 +19,17 @@ jobs:
          - run: npm version patch -m "[RELEASE] %s"
          - run: git push
 
-         - name: 📚 checkout 2
-           uses: actions/checkout@v2
-
-         - name: 🟢 node
-           uses: actions/setup-node@v1.4.2
+         - name: Checkout 2
+           uses: actions/checkout@v3
            with:
-              node-version: 12
+              node-version: 16
+
+         - name: Setup node
+           uses: actions/setup-node
+           with:
               registry-url: https://registry.npmjs.org
-         - name: 🚀 publish
+
+         - name: Publish to NPM
            run: npm publish --access public
            working-directory: humanize-key
            env:
