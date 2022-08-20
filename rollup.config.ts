@@ -16,12 +16,6 @@ export default {
          sourcemap: true,
       },
       {
-         file: pkg.main,
-         name: 'humanizeKey',
-         format: 'cjs',
-         sourcemap: true,
-      },
-      {
          file: pkg.module,
          format: 'es',
          sourcemap: true,

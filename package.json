@@ -1,8 +1,13 @@
 {
    "name": "humanize-key",
    "version": "0.0.10",
-   "description": "small utility for formatting string keys for display",
-   "keywords": [],
+   "description": "formatting string keys for display",
+   "keywords": [
+      "humanize",
+      "key",
+      "string",
+      "formatting"
+   ],
    "main": "dist/lib/humanizeKey.umd.js",
    "module": "dist/lib/humanizeKey.es5.js",
    "typings": "dist/types/humanizeKey.d.ts",
