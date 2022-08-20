@@ -1,0 +1,34 @@
+name: Publish Release
+on:
+   push:
+      branches:
+         - master
+jobs:
+   release:
+      name: release
+      runs-on: ubuntu-latest
+      if: "!startsWith(github.event.head_commit.message, '[RELEASE]')"
+      steps:
+         - name: checkout 1
+           uses: actions/checkout@v2
+           with:
+              token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+
+         - run: git config --global user.name 'William Lubelski'
+         - run: git config --global user.email 'will.lubelski@gmail.com'
+         - run: npm version patch -m "[RELEASE] %s"
+         - run: git push
+
+         - name: 📚 checkout 2
+           uses: actions/checkout@v2
+
+         - name: 🟢 node
+           uses: actions/setup-node@v1.4.2
+           with:
+              node-version: 12
+              registry-url: https://registry.npmjs.org
+         - name: 🚀 publish
+           run: npm publish --access public
+           working-directory: humanize-key
+           env:
+              NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
