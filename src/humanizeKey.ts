@@ -9,10 +9,7 @@ const compact = (str: string) => {
 type Formatter = (str: string) => string
 
 const mapOverWords = (str: string, fn: Formatter) => {
-   return str
-      .split(' ')
-      .map(fn)
-      .join(' ')
+   return str.split(' ').map(fn).join(' ')
 }
 
 const capitalizeFirstLetter = (str: string) => {
@@ -63,7 +60,7 @@ type Args = {
 const makeHumanizeKey = (args?: Args) => {
    const uniqueKeys: Record<string, string> = { ...DEFAULT_UNIQUES }
 
-   const acronyms = args?.acronyms ? [...DEFAULT_ACRONYMS, ...args.acronyms] : DEFAULT_ACRONYMS
+   const acronyms = args?.acronyms ? DEFAULT_ACRONYMS.concat(args.acronyms) : DEFAULT_ACRONYMS
 
    acronyms.forEach((key) => {
       uniqueKeys[key.toLowerCase()] = key.toUpperCase()
