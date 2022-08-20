@@ -119,6 +119,6 @@ const makeHumanizeKey = (args?: Args) => {
 
 const defaultHumanizeKey = makeHumanizeKey()
 
-export { makeHumanizeKey }
+export { defaultHumanizeKey as humanizeKey, makeHumanizeKey }
 
 export default defaultHumanizeKey

@@ -34,7 +34,7 @@ forEach(obj, (value, key) => {
 })
 ```
 
-```js
+```
 ID: 12
 User Name: bobby
 First Name: Bob
@@ -57,7 +57,7 @@ const obj = {
 }
 ```
 
-```js
+```
 ID: 12
 SSN Last Four: 1234
 IRS Account Number: 5678
