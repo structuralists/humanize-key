@@ -22,12 +22,11 @@ jobs:
 
          - name: Checkout 2
            uses: actions/checkout@v2
-           with:
-              node-version: 16
 
          - name: Setup node
            uses: actions/setup-node@v3
            with:
+              node-version: 16
               registry-url: https://registry.npmjs.org
 
          - name: Publish to NPM
