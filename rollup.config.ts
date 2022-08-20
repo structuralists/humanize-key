@@ -11,9 +11,10 @@ export default {
    output: [
       {
          file: pkg.main,
-         name: 'humanizeKey',
+         name: 'humanize-key',
          format: 'umd',
          sourcemap: true,
+         exports: 'named',
       },
       {
          file: pkg.module,
