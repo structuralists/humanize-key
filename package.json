@@ -12,7 +12,7 @@
    "author": "William Lubelski <will.lubelski@gmail.com>",
    "repository": {
       "type": "git",
-      "url": ""
+      "url": "https://github.com/lubelski/humanize-key"
    },
    "license": "MIT",
    "engines": {
