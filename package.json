@@ -1,6 +1,6 @@
 {
    "name": "humanize-key",
-   "version": "0.0.4",
+   "version": "0.0.5",
    "description": "small utility for formatting string keys for display",
    "keywords": [],
    "main": "dist/lib/humanizeKey.umd.js",
