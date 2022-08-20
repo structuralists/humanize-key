@@ -1,8 +1,6 @@
 small utility for formatting string keys for display
 
-[![Node.js Package](https://github.com/lubelski/humanize-key/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/lubelski/humanize-key/actions/workflows/npm-publish.yml)
-
-![Github Action Status](https://github.com/lubelski/humanize-key/actions/workflows/npm-publish/badge.svg)
+[![npm-publish](https://github.com/lubelski/humanize-key/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/lubelski/humanize-key/actions/workflows/npm-publish.yml)
 
 # Description
 
