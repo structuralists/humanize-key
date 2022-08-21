@@ -11,12 +11,14 @@ a (slightly configurable) utility for formatting string keys for display
 # Installation
 
 -  `npm install humanize-key`
--  `yarn install humanize-key`
 
 # Usage
 
 ```ts
 import humanizeKey from 'humanize-key'
+// or
+const { humanizeKey } = require('humanize-key')
+
 const displayString = humanizeKey(key)
 ```
 
@@ -42,7 +44,16 @@ Last Name: Roberts
 Account ID: 321
 ```
 
+currently there are two custom exemptions to the default capitalization
+
+-  `id` -> `ID` rather than `Id`
+-  `ids` -> `IDs`rather than `Ids`
+
+other custom values can be set by use of `makeHumanizeKey`
+
 # Custom values
+
+domains-specific acronyms
 
 ```ts
 import { makeHumanizeKey } from 'humanize-key'
@@ -61,4 +72,29 @@ const obj = {
 ID: 12
 SSN Last Four: 1234
 IRS Account Number: 5678
+```
+
+custom capitalization for terms of art
+
+```ts
+import { makeHumanizeKey } from 'humanize-key'
+const humanizeKey = makeHumanizeKey({
+   acronyms: ['URL']
+   uniques: {
+      oauth: "OAuth",
+      uuids: "UUIDs",
+   }
+})
+```
+
+```ts
+const obj = {
+   oauth_url: 'http://localhost:3000/oauth/callback',
+   recent_uuids: [],
+}
+```
+
+```
+OAuth URL: http://localhost:3000/oauth/callback
+Recent UUIDs: []
 ```
