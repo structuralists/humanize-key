@@ -19,16 +19,18 @@ const displayString = humanizeKey(key)
 ```
 
 ```ts
-const obj = {
+const display = (obj) => {
+   forEach(obj, (value, key) => console.log(`${humanizeKey(key)}: ${value}`))
+}
+```
+
+```js
+display({
    id: 12,
    userName: 'bobby',
    'first-name': 'Bob',
    last_name: 'Roberts',
    account_id: 321,
-}
-
-forEach(obj, (value, key) => {
-   console.log(`${humanizeKey(key)}: ${value}`)
 })
 ```
 
@@ -40,7 +42,7 @@ Last Name: Roberts
 Account ID: 321
 ```
 
-currently there are two custom exemptions to the default capitalization
+currently there are two exemptions to the default capitalization
 
 -  `id` -> `ID` rather than `Id`
 -  `ids` -> `IDs`rather than `Ids`
@@ -84,10 +86,10 @@ const humanizeKey = makeHumanizeKey({
 ```
 
 ```ts
-const obj = {
+display({
    oauth_url: 'http://localhost:3000/oauth/callback',
    recent_uuids: [],
-}
+})
 ```
 
 ```
