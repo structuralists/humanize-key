@@ -27,6 +27,6 @@ jobs:
               registry-url: https://registry.npmjs.org
 
          - name: Publish to NPM
-           run: npm build && npm publish --access public
+           run: npm run build && npm publish --access public
            env:
               NODE_AUTH_TOKEN: ${{secrets.NPM_AUTOMATION_TOKEN}}
