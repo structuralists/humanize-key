@@ -8,9 +8,9 @@
       "string",
       "formatting"
    ],
-   "main": "dist/index.js",
-   "module": "dist/index.mjs",
-   "types": "dist/index.d.ts",
+   "main": "dist/humanizeKey.js",
+   "module": "dist/humanizeKey.mjs",
+   "types": "dist/humanizeKey.d.ts",
    "author": "William Lubelski <will.lubelski@gmail.com>",
    "repository": {
       "type": "git",
