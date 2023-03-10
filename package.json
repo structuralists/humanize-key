@@ -19,8 +19,12 @@
    "license": "MIT",
    "scripts": {
       "change": "pnpm changeset",
-      "build": "tsup src/humanizeKey.ts --format cjs,esm --dts",
-      "lint": "tsc"
+      "build": "tsx src/humanizeKey.ts",
+      "ci": "turbo build lint lint-pkg-json",
+      "lint-pkg-json": "tsx scripts/lint.ts",
+      "lint": "tsc",
+      "release": "turbo run publish",
+      "publish": "changeset publish"
    },
    "jest": {
       "transform": {
