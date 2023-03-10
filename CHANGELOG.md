@@ -1,5 +1,15 @@
 # humanize-key
 
+## 0.3.0
+
+### Minor Changes
+
+-  8f8edb7: fix exports
+
+### Patch Changes
+
+-  1ecf07b: bump
+
 ## 0.2.5
 
 ### Patch Changes
