@@ -1,6 +1,6 @@
 {
    "name": "humanize-key",
-   "version": "0.2.2",
+   "version": "0.2.3",
    "description": "formatting string keys for display",
    "keywords": [
       "humanize",
