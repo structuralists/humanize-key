@@ -18,6 +18,7 @@
    },
    "license": "MIT",
    "scripts": {
+      "change": "pnpm changeset",
       "build": "tsup src/humanizeKey.ts --format cjs,esm --dts",
       "lint": "tsc"
    },
