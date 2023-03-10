@@ -1,0 +1,5 @@
+---
+'humanize-key': patch
+---
+
+bump
