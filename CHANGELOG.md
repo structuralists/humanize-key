@@ -1,5 +1,11 @@
 # humanize-key
 
+## 0.2.5
+
+### Patch Changes
+
+-  6399835: use turbo
+
 ## 0.2.4
 
 ### Patch Changes
