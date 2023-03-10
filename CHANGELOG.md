@@ -1,5 +1,11 @@
 # humanize-key
 
+## 0.2.3
+
+### Patch Changes
+
+-  c59ec6c: add npm token
+
 ## 0.2.2
 
 ### Patch Changes
