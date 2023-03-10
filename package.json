@@ -20,8 +20,7 @@
    "scripts": {
       "change": "pnpm changeset",
       "build": "tsx src/humanizeKey.ts",
-      "ci": "turbo build lint lint-pkg-json",
-      "lint-pkg-json": "tsx scripts/lint.ts",
+      "ci": "turbo build lint",
       "lint": "tsc",
       "release": "turbo run publish",
       "publish": "changeset publish"
