@@ -1,5 +1,11 @@
 # humanize-key
 
+## 0.2.2
+
+### Patch Changes
+
+-  c2c4661: update badges
+
 ## 0.2.1
 
 ### Patch Changes
