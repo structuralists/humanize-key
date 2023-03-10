@@ -69,7 +69,7 @@ const makeHumanizeKey = (args?: Args) => {
    if (args?.uniques) {
       for (const key in args.uniques) {
          const val = args.uniques[key]
-         if (val === null) {
+         if (!val) {
             delete uniqueKeys[key]
          } else {
             uniqueKeys[key] = val
@@ -77,12 +77,12 @@ const makeHumanizeKey = (args?: Args) => {
       }
    }
 
-   const handleUnique = (str: string) => {
+   const handleUnique = (str: string): string => {
       const strLower = str.toLowerCase()
 
-      if (str in uniqueKeys) return uniqueKeys[str]
+      if (str in uniqueKeys) return uniqueKeys[str] as string
 
-      if (strLower in uniqueKeys) return uniqueKeys[strLower]
+      if (strLower in uniqueKeys) return uniqueKeys[strLower] as string
 
       return str
    }
@@ -99,7 +99,7 @@ const makeHumanizeKey = (args?: Args) => {
             ? input
             : ''
 
-      if (key in cache) return cache[key]
+      if (key in cache) return cache[key] as string
 
       const str = key.includes('-')
          ? humanizeKebabKey(key)
