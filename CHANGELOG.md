@@ -1,5 +1,11 @@
 # humanize-key
 
+## 0.2.4
+
+### Patch Changes
+
+-  e557acf: release
+
 ## 0.2.3
 
 ### Patch Changes
