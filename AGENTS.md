@@ -11,7 +11,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - **Runtime / package manager: bun.** Single lockfile `bun.lock`; install with `bun install --frozen-lockfile`. No pnpm/npm lockfiles.
 - **Tests: `bun test`** (`bun:test` API). Specs live in `test/`. Coverage is enforced via `bunfig.toml` (`coverageThreshold = 0.95`, currently 100% funcs/lines).
 - **TypeScript 6** (`tsc --noEmit` for typecheck only). `tsconfig.json` sets `ignoreDeprecations: "6.0"` — required because tsup's dts generator emits a deprecated `baseUrl` under TS 6.
-- **Lint: eslint 10 flat config** (`eslint.config.mjs`). Only `@typescript-eslint/parser` is installed (no plugin rules), matching scaffolding. Core `no-unused-vars`/`no-undef` are off: they false-positive on TS type syntax (e.g. named params in a function-type alias) — defer unused/undefined checks to `tsc`.
+- **Lint: eslint 10 flat config** (`eslint.config.mjs`), scoped to `src/**/*.ts`. Only `@typescript-eslint/parser` is installed (no plugin rulesets), matching scaffolding. It enables a few core rules (`no-var`, `prefer-const`, `eqeqeq` smart) and turns `no-undef` off: it false-positives on TS type syntax (e.g. named params in a function-type alias) — unused/undefined checks are deferred to `tsc`.
 
 ## Build & publish
 
