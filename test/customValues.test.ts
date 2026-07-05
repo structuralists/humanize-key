@@ -1,23 +1,25 @@
+import { describe, it, expect } from 'bun:test'
+
 import humanizeKey, { makeHumanizeKey } from '../src/humanizeKey'
 
 type HumanizeFn = typeof humanizeKey
 
 type Cases = Array<[unknown, string] | [unknown, string, string]>
 
-const makeTestCases = (huamizeFn: HumanizeFn) => (cases: Cases) => {
+const makeTestCases = (humanizeFn: HumanizeFn) => (cases: Cases) => {
    cases.forEach((item) => {
       const [input, result] = item
-      const fromatted_input = typeof input === 'string' ? `'${input}'` : input
+      const formattedInput = typeof input === 'string' ? `'${input}'` : String(input)
 
-      it(`${fromatted_input} -> '${result}'`, () => {
-         expect(huamizeFn(input)).toBe(result)
+      it(`${formattedInput} -> '${result}'`, () => {
+         expect(humanizeFn(input)).toBe(result)
       })
    })
 }
 
 describe('custom humanizeKey', () => {
-   const humanizefn = makeHumanizeKey({ acronyms: ['SSN'] })
-   const testCases = makeTestCases(humanizefn)
+   const humanizeFn = makeHumanizeKey({ acronyms: ['SSN'] })
+   const testCases = makeTestCases(humanizeFn)
 
    describe('custom acronyms', () => {
       testCases([['ssn_number', 'SSN Number']])
@@ -34,8 +36,8 @@ describe('custom humanizeKey', () => {
 })
 
 describe('overriding defaults', () => {
-   const humanizefn = makeHumanizeKey({ uniques: { id: 'id', ids: null } })
-   const testCases = makeTestCases(humanizefn)
+   const humanizeFn = makeHumanizeKey({ uniques: { id: 'id', ids: null } })
+   const testCases = makeTestCases(humanizeFn)
 
    describe('does not handle SSN', () => {
       testCases([['ssn_number', 'Ssn Number']])

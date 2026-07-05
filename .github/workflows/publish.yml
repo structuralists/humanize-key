@@ -1,30 +1,211 @@
-name: Publish
-on:
-   push:
-      branches:
-         - 'master'
+name: Release & Publish
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+# NOTE: triggers on `master` (this repo's current default branch). Scaffolding
+# triggers on `main`; if the captain renames the default branch to `main`,
+# update `branches`, the guard/release `ref`, and every `origin/master` below.
+on:
+  push:
+    branches: [master]
+
+# Serialize release runs so back-to-back merges queue instead of racing.
+# cancel-in-progress must stay false: an in-flight release must finish, and
+# the newest queued run releases everything that accumulated on master behind it.
+concurrency:
+  group: release-publish
+  cancel-in-progress: false
 
 jobs:
-   publish:
-      runs-on: ubuntu-latest
-      steps:
-         - uses: actions/checkout@v3
-         - uses: pnpm/action-setup@v2
-           with:
-              version: 7
-         - uses: actions/setup-node@v3
-           with:
-              node-version: 16.x
-              cache: 'pnpm'
+  # A queued run starts from a stale trigger SHA: by the time it runs, an
+  # earlier run may already have released a master that contains this commit.
+  # Detect that and skip cleanly instead of double-publishing.
+  guard:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+      recover: ${{ steps.check.outputs.recover }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
 
-         - run: pnpm install --frozen-lockfile
-         - name: Create Release Pull Request or Publish
-           id: changesets
-           uses: changesets/action@v1
-           with:
-              publish: pnpm run release
-           env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Check whether this commit still needs a release
+        id: check
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+            echo "::error::Trigger commit $GITHUB_SHA is no longer on master (history rewritten?). Refusing to release."
+            exit 1
+          fi
+          # A covering release commit only proves the version was tagged, not
+          # that it reached npm (publish can fail after the atomic push). Skip
+          # only when the registry has it; otherwise recover by publishing the
+          # already-committed version without a new bump.
+          RELEASED_BY=$(git rev-list --extended-regexp --grep='^release: [0-9]+\.[0-9]+\.[0-9]+ \[skip ci\]$' "$GITHUB_SHA..origin/master" | tail -n 1)
+          VERSION=''
+          if [ -n "$RELEASED_BY" ]; then
+            VERSION=$(git log -1 --format=%s "$RELEASED_BY" | sed -nE 's/^release: ([0-9]+\.[0-9]+\.[0-9]+) \[skip ci\]$/\1/p')
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "recover=false" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+          else
+            PKG=$(node -p "require('./package.json').name")
+            # Only an E404 proves the version is missing from the registry.
+            # Any other npm failure (network, 5xx, auth) must fail the guard
+            # rather than trigger a bogus republish of an existing version.
+            VIEW_STATUS=0
+            VIEW_ERR_FILE=$(mktemp)
+            VIEW_VERSION=$(npm view "$PKG@$VERSION" version 2>"$VIEW_ERR_FILE") || VIEW_STATUS=$?
+            VIEW_ERR=$(cat "$VIEW_ERR_FILE")
+            if [ "$VIEW_STATUS" -eq 0 ] && [ -n "$VIEW_VERSION" ]; then
+              echo "Trigger commit $GITHUB_SHA is already covered by release commit $RELEASED_BY and $PKG@$VERSION is on npm. Skipping."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "recover=false" >> "$GITHUB_OUTPUT"
+              echo "version=" >> "$GITHUB_OUTPUT"
+            elif [ "$VIEW_STATUS" -eq 0 ] || echo "$VIEW_ERR" | grep -q 'E404'; then
+              echo "Release commit $RELEASED_BY is on master but $PKG@$VERSION never reached npm. Recovering: republishing v$VERSION without a new bump."
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              echo "recover=true" >> "$GITHUB_OUTPUT"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            else
+              echo "::error::npm view $PKG@$VERSION failed (exit $VIEW_STATUS), cannot tell whether the version is published. Re-run when the registry is reachable."
+              echo "$VIEW_ERR"
+              exit 1
+            fi
+          fi
+
+  release:
+    needs: guard
+    if: needs.guard.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      # Check out the current tip of master, not the (possibly stale) trigger
+      # SHA, so a queued run versions on top of the latest release commit.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Verify checkout contains the trigger commit
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" HEAD; then
+            echo "::error::Checked-out master ($(git rev-parse HEAD)) does not contain trigger commit $GITHUB_SHA."
+            exit 1
+          fi
+
+      # Recovery: the version was committed and tagged by the failed run but
+      # never published. Check out exactly the tagged content and go straight
+      # to build + publish — no new bump, no push, no re-test.
+      - name: Check out covering release tag (recovery)
+        if: needs.guard.outputs.recover == 'true'
+        run: git checkout "v${{ needs.guard.outputs.version }}"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm install -g npm@latest
+
+      # bun is needed on both paths: the normal path runs checks, the recovery
+      # path still has to rebuild dist from the tagged source before publish.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - if: needs.guard.outputs.recover != 'true'
+        run: bun run typecheck
+      - if: needs.guard.outputs.recover != 'true'
+        run: bun run lint
+      - if: needs.guard.outputs.recover != 'true'
+        run: bun run test
+
+      - name: Configure git
+        if: needs.guard.outputs.recover != 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Determine bump type from commit message
+        id: bump
+        if: needs.guard.outputs.recover != 'true'
+        run: |
+          # A run can release more than one merge commit (merges that landed
+          # while an earlier release was in flight), so scan every commit
+          # since the last release commit and take the largest bump.
+          LAST_RELEASE=$(git rev-list -1 --extended-regexp --grep='^release: [0-9]+\.[0-9]+\.[0-9]+ \[skip ci\]$' HEAD)
+          if [ -n "$LAST_RELEASE" ]; then
+            MSG=$(git log --format=%B "$LAST_RELEASE..HEAD")
+          else
+            MSG=$(git log -1 --pretty=%B)
+          fi
+          if echo "$MSG" | grep -qE "BREAKING CHANGE|^[a-z]+(\([^)]+\))?!:"; then
+            echo "type=major" >> "$GITHUB_OUTPUT"
+          elif echo "$MSG" | grep -qE "^feat(\(|:)"; then
+            echo "type=minor" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump version
+        id: version
+        if: needs.guard.outputs.recover != 'true'
+        run: |
+          NEW_TAG=$(npm version ${{ steps.bump.outputs.type }} -m "release: %s [skip ci]")
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      # --atomic makes the branch and tag update all-or-nothing: a rejected
+      # branch push can no longer leave an orphaned release tag behind.
+      - name: Push commit and tag
+        if: needs.guard.outputs.recover != 'true'
+        run: git push --atomic origin master "${{ steps.version.outputs.tag }}"
+
+      # Build the published artifacts (dist/) from source. dist is gitignored,
+      # so it must be produced here on both the normal and recovery paths
+      # before npm publish — package.json "files" ships only dist.
+      - name: Build
+        run: bun run build
+
+      # A recovery publish may run after newer versions already reached npm;
+      # it must not repoint the `latest` dist-tag at the older version.
+      - name: Publish to npm
+        run: |
+          if [ '${{ needs.guard.outputs.recover }}' != 'true' ]; then
+            npm publish
+            exit 0
+          fi
+          PKG=$(node -p "require('./package.json').name")
+          VERSION='${{ needs.guard.outputs.version }}'
+          LATEST_STATUS=0
+          LATEST_ERR_FILE=$(mktemp)
+          LATEST=$(npm view "$PKG" version 2>"$LATEST_ERR_FILE") || LATEST_STATUS=$?
+          if [ "$LATEST_STATUS" -ne 0 ] && ! grep -q 'E404' "$LATEST_ERR_FILE"; then
+            echo "::error::npm view $PKG version failed (exit $LATEST_STATUS), cannot tell whether publishing v$VERSION would regress the latest dist-tag. Re-run when the registry is reachable."
+            cat "$LATEST_ERR_FILE"
+            exit 1
+          fi
+          if [ -n "$LATEST" ] && [ "$LATEST" != "$VERSION" ] && [ "$(printf '%s\n' "$LATEST" "$VERSION" | sort -V | tail -n 1)" = "$LATEST" ]; then
+            echo "Registry latest ($LATEST) is newer than recovered v$VERSION; publishing without moving the latest dist-tag."
+            npm publish --tag recovery
+            npm dist-tag rm "$PKG" recovery || echo "::warning::Could not remove temporary 'recovery' dist-tag from $PKG; remove it manually with: npm dist-tag rm $PKG recovery"
+          else
+            npm publish
+          fi
+
+      - name: Create GitHub release if missing
+        run: |
+          TAG='${{ steps.version.outputs.tag }}'
+          [ -n "$TAG" ] || TAG='v${{ needs.guard.outputs.version }}'
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

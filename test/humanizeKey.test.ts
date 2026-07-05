@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'bun:test'
+
 import humanizeKey from '../src/humanizeKey'
 
 type Cases = Array<[unknown, string] | [unknown, string, string]>
@@ -5,9 +7,9 @@ type Cases = Array<[unknown, string] | [unknown, string, string]>
 const testCases = (cases: Cases) => {
    cases.forEach((item) => {
       const [input, result] = item
-      const fromatted_input = typeof input === 'string' ? `'${input}'` : input
+      const formattedInput = typeof input === 'string' ? `'${input}'` : String(input)
 
-      it(`${fromatted_input} -> '${result}'`, () => {
+      it(`${formattedInput} -> '${result}'`, () => {
          expect(humanizeKey(input)).toBe(result)
       })
    })
