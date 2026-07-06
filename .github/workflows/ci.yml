@@ -1,0 +1,28 @@
+name: CI
+
+# The same checks the release job runs post-merge (publish.yml), but on every
+# PR — so merging green is enforced, and the release job's checks are a
+# formality rather than the first place a break surfaces.
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+      - run: bun run build

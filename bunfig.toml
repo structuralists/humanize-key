@@ -1,0 +1,7 @@
+[test]
+# Coverage is collected on every `bun test` run and the suite fails if it
+# regresses below the bar. The characterization suite covers the whole module,
+# so this stays high (was a 70% jest threshold before the bun migration).
+coverage = true
+coverageSkipTestFiles = true
+coverageThreshold = 0.95
